@@ -12,8 +12,9 @@ import plotly.graph_objects as go
 from tqdm import tqdm
 
 
-NUM_SERVERS = 14
+NUM_SERVERS = 1
 LOG_ROOT_DIR = "~/fastchat_logs"
+LOG_ROOT_DIR = "/data/2024/1018chatbotarena/FastChat/logs"
 
 
 def get_log_files(max_num_files=None):
@@ -61,7 +62,8 @@ def load_log_files_parallel(log_files, num_threads=16):
     from multiprocessing import Pool
 
     with Pool(num_threads) as p:
-        ret_all = list(tqdm(p.imap(load_log_files, log_files), total=len(log_files)))
+        ret_all = list(
+            tqdm(p.imap(load_log_files, log_files), total=len(log_files)))
         for ret in ret_all:
             data_all.extend(ret)
     return data_all
@@ -71,7 +73,8 @@ def get_anony_vote_df(df):
     anony_vote_df = df[
         df["type"].isin(["leftvote", "rightvote", "tievote", "bothbad_vote"])
     ]
-    anony_vote_df = anony_vote_df[anony_vote_df["models"].apply(lambda x: x[0] == "")]
+    anony_vote_df = anony_vote_df[anony_vote_df["models"].apply(
+        lambda x: x[0] == "")]
     return anony_vote_df
 
 
@@ -80,8 +83,9 @@ def merge_counts(series, on, names):
     for i in range(2, len(series)):
         ret = pd.merge(ret, series[i], on=on)
     ret = ret.reset_index()
-    old_names = list(ret.columns)[-len(series) :]
-    rename = {old_name: new_name for old_name, new_name in zip(old_names, names)}
+    old_names = list(ret.columns)[-len(series):]
+    rename = {old_name: new_name for old_name,
+              new_name in zip(old_names, names)}
     ret = ret.rename(columns=rename)
     return ret
 
@@ -137,8 +141,10 @@ def report_basic_stats(log_files):
 
     # Model call counts
     model_hist_all = df_all[df_all["type"] == "chat"]["model"].value_counts()
-    model_hist_1_day = df_1_day[df_1_day["type"] == "chat"]["model"].value_counts()
-    model_hist_1_hour = df_1_hour[df_1_hour["type"] == "chat"]["model"].value_counts()
+    model_hist_1_day = df_1_day[df_1_day["type"]
+                                == "chat"]["model"].value_counts()
+    model_hist_1_hour = df_1_hour[df_1_hour["type"]
+                                  == "chat"]["model"].value_counts()
     model_hist = merge_counts(
         [model_hist_all, model_hist_1_day, model_hist_1_hour],
         on="model",
@@ -168,7 +174,8 @@ def report_basic_stats(log_files):
         on="type",
         names=["All", "Last Day"],
     )
-    anony_vote_hist_md = anony_vote_hist.to_markdown(index=False, tablefmt="github")
+    anony_vote_hist_md = anony_vote_hist.to_markdown(
+        index=False, tablefmt="github")
 
     # Last 24 hours
     chat_1_day = df_1_day[df_1_day["type"] == "chat"]
@@ -177,7 +184,8 @@ def report_basic_stats(log_files):
     for i in range(24, 0, -1):
         left = base + (i - 1) * 3600
         right = base + i * 3600
-        num = ((chat_1_day["tstamp"] >= left) & (chat_1_day["tstamp"] < right)).sum()
+        num = ((chat_1_day["tstamp"] >= left) & (
+            chat_1_day["tstamp"] < right)).sum()
         num_chats_last_24_hours.append(num)
     times = [
         datetime.datetime.fromtimestamp(
@@ -185,8 +193,10 @@ def report_basic_stats(log_files):
         ).strftime("%Y-%m-%d %H:%M:%S %Z")
         for i in range(24, 0, -1)
     ]
-    last_24_hours_df = pd.DataFrame({"time": times, "value": num_chats_last_24_hours})
-    last_24_hours_md = last_24_hours_df.to_markdown(index=False, tablefmt="github")
+    last_24_hours_df = pd.DataFrame(
+        {"time": times, "value": num_chats_last_24_hours})
+    last_24_hours_md = last_24_hours_df.to_markdown(
+        index=False, tablefmt="github")
 
     # Last update datetime
     last_updated_tstamp = now_t

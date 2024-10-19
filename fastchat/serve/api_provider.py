@@ -36,7 +36,54 @@ def get_api_provider_stream_iter(
             top_p,
             max_new_tokens,
             api_base=model_api_dict["api_base"],
+            # api_key=model_api_dict["api_key"],
+        )
+    elif model_api_dict["api_type"].find("openai-custom") >= 0:
+        if conv.get_system_message() == "":
+            if model_api_dict["api_type"] == "openai-custom-tanuki":
+                conv.set_system_message('以下は、タスクを説明する指示です。要求を適切に満たす応答を書きなさい。')
+            elif model_api_dict["api_type"] == "openai-custom-calm":
+                conv.set_system_message('あなたは親切なAIアシスタントです。')
+
+        messages = conv.to_openai_api_messages()
+        stream_iter = openai_api_stream_iter(
+            model_api_dict["model_name"],
+            messages,
+            temperature,
+            top_p,
+            max_new_tokens,
+            api_base=model_api_dict["api_base"],
             api_key=model_api_dict["api_key"],
+        )
+    elif model_api_dict["api_type"] == "openai-llama3.1-swallow70b":
+        if conv.get_system_message() == "":
+            conv.set_system_message('あなたは誠実で優秀な日本人のアシスタントです。')
+
+        messages = conv.to_openai_api_messages()
+        stream_iter = openai_api_stream_iter(
+            model_api_dict["model_name"],
+            messages,
+            temperature,
+            top_p,
+            max_new_tokens,
+            api_base=model_api_dict["api_base"],
+            api_key=model_api_dict["api_key"],
+            stop="<|im_end|>",
+        )
+    elif model_api_dict["api_type"] == "openai-llmjp3":
+        if conv.get_system_message() == "":
+            conv.set_system_message('以下は、タスクを説明する指示です。要求を適切に満たす応答を書きなさい。')
+
+        messages = conv.to_openai_api_messages()
+        stream_iter = openai_api_stream_iter(
+            model_api_dict["model_name"],
+            messages,
+            temperature,
+            top_p,
+            max_new_tokens,
+            api_base=model_api_dict["api_base"],
+            api_key=model_api_dict["api_key"],
+            stop="<|im_end|>",
         )
     elif model_api_dict["api_type"] == "openai_no_stream":
         prompt = conv.to_openai_api_messages()
@@ -47,7 +94,7 @@ def get_api_provider_stream_iter(
             top_p,
             max_new_tokens,
             api_base=model_api_dict["api_base"],
-            api_key=model_api_dict["api_key"],
+            # api_key=model_api_dict["api_key"],
             stream=False,
         )
     elif model_api_dict["api_type"] == "openai_o1":
@@ -107,7 +154,7 @@ def get_api_provider_stream_iter(
             temperature,
             top_p,
             max_new_tokens,
-            api_key=model_api_dict["api_key"],
+            # api_key=model_api_dict["api_key"],
         )
     elif model_api_dict["api_type"] == "gemini_no_stream":
         prompt = conv.to_gemini_api_messages()
@@ -117,7 +164,7 @@ def get_api_provider_stream_iter(
             temperature,
             top_p,
             max_new_tokens,
-            api_key=model_api_dict["api_key"],
+            # api_key=model_api_dict["api_key"],
             use_stream=False,
         )
     elif model_api_dict["api_type"] == "bard":
@@ -261,6 +308,7 @@ def openai_api_stream_iter(
     api_key=None,
     stream=True,
     is_o1=False,
+    stop="dummy_stop_token123456789",
 ):
     import openai
 
@@ -308,6 +356,7 @@ def openai_api_stream_iter(
             temperature=temperature,
             max_tokens=max_new_tokens,
             stream=True,
+            stop=stop,
         )
         text = ""
         for chunk in res:
@@ -436,7 +485,8 @@ def openai_assistant_api_stream_iter(
     import base64
 
     api_key = api_key or os.environ["OPENAI_API_KEY"]
-    client = openai.OpenAI(base_url="https://api.openai.com/v1", api_key=api_key)
+    client = openai.OpenAI(
+        base_url="https://api.openai.com/v1", api_key=api_key)
 
     if state.oai_thread_id is None:
         logger.info("==== create thread ====")
@@ -528,7 +578,8 @@ def openai_assistant_api_stream_iter(
                                 for match in matches:
                                     print(match)
                                     if match not in idx_mapping:
-                                        idx_mapping[match] = len(idx_mapping) + 1
+                                        idx_mapping[match] = len(
+                                            idx_mapping) + 1
                                     citation_number = idx_mapping[match]
 
                             start_idx = anno["start_index"] + cur_offset
@@ -741,7 +792,8 @@ def gemini_api_stream_iter(
             }
     else:
         try:
-            response = convo.send_message(messages[-1]["content"], stream=False)
+            response = convo.send_message(
+                messages[-1]["content"], stream=False)
             text = response.candidates[0].content.parts[0].text
             pos = 0
             while pos < len(text):
@@ -1021,7 +1073,8 @@ def cohere_api_stream_iter(
     # prepare and log requests
     chat_history = [
         dict(
-            role=OPENAI_TO_COHERE_ROLE_MAP[message["role"]], message=message["content"]
+            role=OPENAI_TO_COHERE_ROLE_MAP[message["role"]
+                                           ], message=message["content"]
         )
         for message in messages[:-1]
     ]
@@ -1164,7 +1217,8 @@ def reka_api_stream_iter(
     for turn in messages:
         for message in turn.content:
             if isinstance(message, TypedText):
-                text_messages.append({"type": message.type, "text": message.text})
+                text_messages.append(
+                    {"type": message.type, "text": message.text})
     logged_request = dict(request)
     logged_request["conversation_history"] = text_messages
 
@@ -1238,7 +1292,8 @@ def metagen_api_stream_iter(
         )
 
         if res.status_code != 200:
-            logger.error(f"Unexpected response ({res.status_code}): {res.text}")
+            logger.error(
+                f"Unexpected response ({res.status_code}): {res.text}")
             yield {
                 "text": f"**API REQUEST ERROR** Reason: Unknown.",
                 "error_code": 1,

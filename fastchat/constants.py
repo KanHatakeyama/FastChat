@@ -8,14 +8,10 @@ import os
 REPO_PATH = os.path.dirname(os.path.dirname(__file__))
 
 # Survey Link URL (to be removed) #00729c
-SURVEY_LINK = """<div style='text-align: left; margin: 20px 0;'>
-    <div style='display: inline-block; border: 2px solid #C41E3A; padding: 20px; padding-bottom: 10px; padding-top: 10px; border-radius: 5px;'>
-        <span style='color: #C41E3A; font-weight: bold;'>New Launch! Jailbreak models at <a href='https://redarena.ai' style='color: #C41E3A; text-decoration: underline;'>RedTeam Arena</a>. </span>
-    </div>
-</div>"""
+SURVEY_LINK = """"""
 # SURVEY_LINK = ""
 
-##### For the gradio web server
+# For the gradio web server
 SERVER_ERROR_MSG = (
     "**NETWORK ERROR DUE TO HIGH TRAFFIC. PLEASE REGENERATE OR REFRESH THIS PAGE.**"
 )
@@ -47,11 +43,12 @@ LOGDIR = os.getenv("LOGDIR", ".")
 CPU_ISA = os.getenv("CPU_ISA")
 
 
-##### For the controller and workers (could be overwritten through ENV variables.)
+# For the controller and workers (could be overwritten through ENV variables.)
 CONTROLLER_HEART_BEAT_EXPIRATION = int(
     os.getenv("FASTCHAT_CONTROLLER_HEART_BEAT_EXPIRATION", 90)
 )
-WORKER_HEART_BEAT_INTERVAL = int(os.getenv("FASTCHAT_WORKER_HEART_BEAT_INTERVAL", 45))
+WORKER_HEART_BEAT_INTERVAL = int(
+    os.getenv("FASTCHAT_WORKER_HEART_BEAT_INTERVAL", 45))
 WORKER_API_TIMEOUT = int(os.getenv("FASTCHAT_WORKER_API_TIMEOUT", 100))
 WORKER_API_EMBEDDING_BATCH_SIZE = int(
     os.getenv("FASTCHAT_WORKER_API_EMBEDDING_BATCH_SIZE", 4)

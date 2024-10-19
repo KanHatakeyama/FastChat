@@ -104,7 +104,8 @@ def clear_history_example(request: gr.Request):
 
 
 def vote_last_response(states, vote_type, model_selectors, request: gr.Request):
-    filename = get_conv_log_filename(states[0].is_vision, states[0].has_csam_image)
+    filename = get_conv_log_filename(
+        states[0].is_vision, states[0].has_csam_image)
     with open(filename, "a") as fout:
         data = {
             "tstamp": round(time.time(), 4),
@@ -132,7 +133,8 @@ def rightvote_last_response(
 ):
     logger.info(f"rightvote (named). ip: {get_ip(request)}")
     vote_last_response(
-        [state0, state1], "rightvote", [model_selector0, model_selector1], request
+        [state0, state1], "rightvote", [
+            model_selector0, model_selector1], request
     )
     return (None,) + (disable_btn,) * 4
 
@@ -152,7 +154,8 @@ def bothbad_vote_last_response(
 ):
     logger.info(f"bothbad_vote (named). ip: {get_ip(request)}")
     vote_last_response(
-        [state0, state1], "bothbad_vote", [model_selector0, model_selector1], request
+        [state0, state1], "bothbad_vote", [
+            model_selector0, model_selector1], request
     )
     return (None,) + (disable_btn,) * 4
 
@@ -172,7 +175,8 @@ def regenerate(state0, state1, request: gr.Request):
     states[0].skip_next = True
     states[1].skip_next = True
     return (
-        states + [x.to_gradio_chatbot() for x in states] + [None] + [no_change_btn] * 6
+        states + [x.to_gradio_chatbot() for x in states] +
+        [None] + [no_change_btn] * 6
     )
 
 
@@ -206,13 +210,15 @@ def add_text(
             model_selector0 in context.text_models
             and model_selector0 not in context.vision_models
         ):
-            gr.Warning(f"{model_selector0} is a text-only model. Image is ignored.")
+            gr.Warning(
+                f"{model_selector0} is a text-only model. Image is ignored.")
             images = []
         if (
             model_selector1 in context.text_models
             and model_selector1 not in context.vision_models
         ):
-            gr.Warning(f"{model_selector1} is a text-only model. Image is ignored.")
+            gr.Warning(
+                f"{model_selector1} is a text-only model. Image is ignored.")
             images = []
 
     ip = get_ip(request)
@@ -244,7 +250,8 @@ def add_text(
     all_conv_text_left = states[0].conv.get_prompt()
     all_conv_text_right = states[0].conv.get_prompt()
     all_conv_text = (
-        all_conv_text_left[-1000:] + all_conv_text_right[-1000:] + "\nuser: " + text
+        all_conv_text_left[-1000:] +
+        all_conv_text_right[-1000:] + "\nuser: " + text
     )
 
     images = convert_images_to_conversation_format(images)
@@ -287,7 +294,8 @@ def add_text(
         post_processed_text = _prepare_text_with_image(
             states[i], text, images, csam_flag=csam_flag
         )
-        states[i].conv.append_message(states[i].conv.roles[0], post_processed_text)
+        states[i].conv.append_message(
+            states[i].conv.roles[0], post_processed_text)
         states[i].conv.append_message(states[i].conv.roles[1], None)
         states[i].skip_next = False
 
@@ -305,7 +313,6 @@ def add_text(
 def build_side_by_side_vision_ui_named(context: Context, random_questions=None):
     notice_markdown = f"""
 # ⚔️  Chatbot Arena (formerly LMSYS): Free AI Chat to Compare & Test Best AI Chatbots
-[Blog](https://blog.lmarena.ai/blog/2023/arena/) | [GitHub](https://github.com/lm-sys/FastChat) | [Paper](https://arxiv.org/abs/2403.04132) | [Dataset](https://github.com/lm-sys/FastChat/blob/main/docs/dataset_release.md) | [Twitter](https://twitter.com/lmsysorg) | [Discord](https://discord.gg/6GXcFg3TH8) | [Kaggle Competition](https://www.kaggle.com/competitions/lmsys-chatbot-arena)
 
 {SURVEY_LINK}
 
@@ -514,7 +521,8 @@ function (a, b, c, d) {
         model_selectors[i].change(
             clear_history,
             None,
-            states + chatbots + [multimodal_textbox, textbox, send_btn] + btn_list,
+            states + chatbots + [multimodal_textbox,
+                                 textbox, send_btn] + btn_list,
         ).then(set_visible_image, [multimodal_textbox], [image_column])
 
     multimodal_textbox.input(add_image, [multimodal_textbox], [imagebox]).then(
@@ -569,7 +577,8 @@ function (a, b, c, d) {
         ).then(set_visible_image, [multimodal_textbox], [image_column]).then(
             clear_history_example,
             None,
-            states + chatbots + [multimodal_textbox, textbox, send_btn] + btn_list,
+            states + chatbots + [multimodal_textbox,
+                                 textbox, send_btn] + btn_list,
         )
 
     return states + model_selectors

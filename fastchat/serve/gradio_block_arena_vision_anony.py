@@ -128,7 +128,8 @@ def clear_history_example(request: gr.Request):
 
 
 def vote_last_response(states, vote_type, model_selectors, request: gr.Request):
-    filename = get_conv_log_filename(states[0].is_vision, states[0].has_csam_image)
+    filename = get_conv_log_filename(
+        states[0].is_vision, states[0].has_csam_image)
 
     with open(filename, "a") as fout:
         data = {
@@ -185,7 +186,8 @@ def rightvote_last_response(
 ):
     logger.info(f"rightvote (anony). ip: {get_ip(request)}")
     for x in vote_last_response(
-        [state0, state1], "rightvote", [model_selector0, model_selector1], request
+        [state0, state1], "rightvote", [
+            model_selector0, model_selector1], request
     ):
         yield x
 
@@ -205,7 +207,8 @@ def bothbad_vote_last_response(
 ):
     logger.info(f"bothbad_vote (anony). ip: {get_ip(request)}")
     for x in vote_last_response(
-        [state0, state1], "bothbad_vote", [model_selector0, model_selector1], request
+        [state0, state1], "bothbad_vote", [
+            model_selector0, model_selector1], request
     ):
         yield x
 
@@ -225,7 +228,8 @@ def regenerate(state0, state1, request: gr.Request):
     states[0].skip_next = True
     states[1].skip_next = True
     return (
-        states + [x.to_gradio_chatbot() for x in states] + [None] + [no_change_btn] * 6
+        states + [x.to_gradio_chatbot() for x in states] +
+        [None] + [no_change_btn] * 6
     )
 
 
@@ -317,7 +321,8 @@ def add_text(
 
     conv = states[0].conv
     if (len(conv.messages) - conv.offset) // 2 >= CONVERSATION_TURN_LIMIT:
-        logger.info(f"conversation turn limit. ip: {get_ip(request)}. text: {text}")
+        logger.info(
+            f"conversation turn limit. ip: {get_ip(request)}. text: {text}")
         for i in range(num_sides):
             states[i].skip_next = True
         return (
@@ -355,7 +360,8 @@ def add_text(
         post_processed_text = _prepare_text_with_image(
             states[i], text, images, csam_flag=csam_flag
         )
-        states[i].conv.append_message(states[i].conv.roles[0], post_processed_text)
+        states[i].conv.append_message(
+            states[i].conv.roles[0], post_processed_text)
         states[i].conv.append_message(states[i].conv.roles[1], None)
         states[i].skip_next = False
 
@@ -378,7 +384,6 @@ def add_text(
 def build_side_by_side_vision_ui_anony(context: Context, random_questions=None):
     notice_markdown = f"""
 # ⚔️  Chatbot Arena (formerly LMSYS): Free AI Chat to Compare & Test Best AI Chatbots
-[Blog](https://blog.lmarena.ai/blog/2023/arena/) | [GitHub](https://github.com/lm-sys/FastChat) | [Paper](https://arxiv.org/abs/2403.04132) | [Dataset](https://github.com/lm-sys/FastChat/blob/main/docs/dataset_release.md) | [Twitter](https://twitter.com/lmsysorg) | [Discord](https://discord.gg/6GXcFg3TH8) | [Kaggle Competition](https://www.kaggle.com/competitions/lmsys-chatbot-arena)
 
 {SURVEY_LINK}
 
@@ -526,22 +531,26 @@ def build_side_by_side_vision_ui_anony(context: Context, random_questions=None):
     leftvote_btn.click(
         leftvote_last_response,
         states + model_selectors,
-        model_selectors + [textbox, leftvote_btn, rightvote_btn, tie_btn, bothbad_btn],
+        model_selectors + [textbox, leftvote_btn,
+                           rightvote_btn, tie_btn, bothbad_btn],
     )
     rightvote_btn.click(
         rightvote_last_response,
         states + model_selectors,
-        model_selectors + [textbox, leftvote_btn, rightvote_btn, tie_btn, bothbad_btn],
+        model_selectors + [textbox, leftvote_btn,
+                           rightvote_btn, tie_btn, bothbad_btn],
     )
     tie_btn.click(
         tievote_last_response,
         states + model_selectors,
-        model_selectors + [textbox, leftvote_btn, rightvote_btn, tie_btn, bothbad_btn],
+        model_selectors + [textbox, leftvote_btn,
+                           rightvote_btn, tie_btn, bothbad_btn],
     )
     bothbad_btn.click(
         bothbad_vote_last_response,
         states + model_selectors,
-        model_selectors + [textbox, leftvote_btn, rightvote_btn, tie_btn, bothbad_btn],
+        model_selectors + [textbox, leftvote_btn,
+                           rightvote_btn, tie_btn, bothbad_btn],
     )
     regenerate_btn.click(
         regenerate, states, states + chatbots + [textbox] + btn_list
