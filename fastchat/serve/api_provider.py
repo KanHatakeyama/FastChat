@@ -38,12 +38,21 @@ def get_api_provider_stream_iter(
             api_base=model_api_dict["api_base"],
             # api_key=model_api_dict["api_key"],
         )
+
     elif model_api_dict["api_type"].find("openai-custom") >= 0:
         if conv.get_system_message() == "":
             if model_api_dict["api_type"] == "openai-custom-tanuki":
                 conv.set_system_message('以下は、タスクを説明する指示です。要求を適切に満たす応答を書きなさい。')
             elif model_api_dict["api_type"] == "openai-custom-calm":
                 conv.set_system_message('あなたは親切なAIアシスタントです。')
+            elif model_api_dict["api_type"] == "openai-custom-deepinfra":
+                conv.set_system_message(
+                    'あなたは親切な日本語のアシスタントです｡')
+
+        if "api_key" in model_api_dict:
+            api_key = model_api_dict["api_key"]
+        else:
+            api_key = os.environ[model_api_dict["env_api_key"]]
 
         messages = conv.to_openai_api_messages()
         stream_iter = openai_api_stream_iter(
@@ -53,9 +62,11 @@ def get_api_provider_stream_iter(
             top_p,
             max_new_tokens,
             api_base=model_api_dict["api_base"],
-            api_key=model_api_dict["api_key"],
+            api_key=api_key,
+            # api_key=os.environ[model_api_dict["env_api_key"]],
+            # api_key=model_api_dict["api_key"],
         )
-    elif model_api_dict["api_type"] == "openai-llama3.1-swallow70b":
+    elif model_api_dict["api_type"] == "openai-llama3.1":
         if conv.get_system_message() == "":
             conv.set_system_message('あなたは誠実で優秀な日本人のアシスタントです。')
 
@@ -189,7 +200,7 @@ def get_api_provider_stream_iter(
             temperature,
             top_p,
             max_new_tokens,
-            api_key=model_api_dict.get("api_key"),
+            api_key=None,
         )
     elif model_api_dict["api_type"] == "nvidia":
         prompt = conv.to_openai_api_messages()
@@ -253,8 +264,8 @@ def get_api_provider_stream_iter(
             temperature=temperature,
             top_p=top_p,
             max_new_tokens=max_new_tokens,
-            api_base=model_api_dict["api_base"],
-            api_key=model_api_dict["api_key"],
+            # api_base=model_api_dict["api_base"],
+            # api_key=model_api_dict["api_key"],
         )
     elif model_api_dict["api_type"] == "reka":
         messages = conv.to_reka_api_messages()
@@ -632,23 +643,51 @@ def anthropic_api_stream_iter(model_name, prompt, temperature, top_p, max_new_to
     }
     logger.info(f"==== request ====\n{gen_params}")
 
-    res = c.completions.create(
-        prompt=prompt,
-        stop_sequences=[anthropic.HUMAN_PROMPT],
-        max_tokens_to_sample=max_new_tokens,
+    res = c.messages.create(
+        # res = c.completions.create(
+        # prompt=prompt,
+        messages=prompt,
+        # stop_sequences=[anthropic.HUMAN_PROMPT],
+        # max_tokens_to_sample=max_new_tokens,
+        max_tokens=max_new_tokens,
         temperature=temperature,
         top_p=top_p,
         model=model_name,
         stream=True,
     )
     text = ""
+    text = ""
     for chunk in res:
-        text += chunk.completion
+
+        if hasattr(chunk, 'delta'):
+            if hasattr(chunk.delta, 'text'):
+                if chunk.delta.text is not None:
+                    if isinstance(chunk.delta.text, str):
+                        text += chunk.delta.text
+                    elif isinstance(chunk.delta.text, list):
+                        text += ''.join(chunk.delta.text)
+        elif hasattr(chunk, 'message') and chunk.message.content is not None:
+            if isinstance(chunk.message.content, str):
+                text += chunk.message.content
+            elif isinstance(chunk.message.content, list):
+                text += ''.join(chunk.message.content)
+        else:
+            print(chunk)
+            continue
+
         data = {
             "text": text,
             "error_code": 0,
         }
         yield data
+    # for chunk in res:
+    #    text += chunk.completion
+        # text += chunk.text_stream
+    #    data = {
+    #        "text": text,
+    #        "error_code": 0,
+    #    }
+    #    yield data
 
 
 def anthropic_message_api_stream_iter(
@@ -1057,6 +1096,8 @@ def cohere_api_stream_iter(
     api_base: Optional[str] = None,
 ):
     import cohere
+    if api_key is None:
+        api_key = os.environ["COHERE_API_KEY"]
 
     OPENAI_TO_COHERE_ROLE_MAP = {
         "user": "User",
@@ -1064,10 +1105,11 @@ def cohere_api_stream_iter(
         "system": "System",
     }
 
+    # client = cohere.ClientV2(
     client = cohere.Client(
         api_key=api_key,
-        base_url=api_base,
-        client_name=client_name,
+        # base_url=api_base,
+        # client_name=client_name,
     )
 
     # prepare and log requests
@@ -1093,6 +1135,7 @@ def cohere_api_stream_iter(
 
     # make request and stream response
     res = client.chat_stream(
+        # messages=messages,
         message=actual_prompt,
         chat_history=chat_history,
         model=model_id,
