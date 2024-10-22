@@ -1,5 +1,10 @@
 #conda activate arena
 while true; do
+    #git
+    cd chatbotarena-ja-log
+    git pull
+    cd ../
+    cp chatbotarena-ja-log/data/*-conv.json server0  #copy
     rm elo_results.pkl
     rm clean.json
     cp ../*-conv.json server0  #copy
