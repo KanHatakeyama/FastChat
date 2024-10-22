@@ -21,6 +21,7 @@ data["full"]["elo_rating_final"]
 
 df2 = data["full"]["leaderboard_table_df"]
 df2 = df2.sort_values("rating", ascending=False)
+df2 = df2[df2["num_battles"] > 10]
 ds2 = datasets.Dataset.from_pandas(df2)
 ds2.push_to_hub("kanhatakeyama/chatbot-arena-ja-elo-rating")
 
